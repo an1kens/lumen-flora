@@ -67,7 +67,7 @@ export class ParamBus {
       spiral: 0.5,
       wind: 0,
       dolly: 0.5,
-      bgDim: 0.7,
+      bgDim: 0.55,
       species: 0,
     };
 

@@ -1,15 +1,21 @@
 import * as THREE from 'three';
 import { ParamBus } from './core/ParamBus';
+import { BackgroundLayer } from './render/background';
+import { createGardenScene } from './render/scene';
 import { createPanel, bindPanelToggle } from './ui/panel';
 
 // ── Bootstrap ──────────────────────────────────────────────────────────────
 
 const container = document.getElementById('app')!;
 const fpsEl = document.getElementById('fps')!;
+const overlay = document.getElementById('overlay')!;
 
 const bus = new ParamBus();
 const gui = createPanel(bus);
 bindPanelToggle(gui);
+
+const background = new BackgroundLayer(bus);
+const { scene, camera, debugOrb, debugMat } = createGardenScene();
 
 // ── Renderer ───────────────────────────────────────────────────────────────
 
@@ -19,28 +25,73 @@ const renderer = new THREE.WebGLRenderer({
   powerPreference: 'high-performance',
 });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setClearColor(0x050508, 1);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 container.appendChild(renderer.domElement);
 
-// ── Scene (debug orb — proves springs ease visually) ───────────────────────
+// ── Camera permission overlay ──────────────────────────────────────────────
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-camera.position.set(0, 0, 4);
+function showOverlay(html: string, clickable: boolean): void {
+  overlay.innerHTML = html;
+  overlay.style.display = 'flex';
+  overlay.style.pointerEvents = clickable ? 'auto' : 'none';
+  overlay.style.cursor = clickable ? 'pointer' : 'default';
+}
 
-const debugGeo = new THREE.SphereGeometry(0.15, 32, 32);
-const debugMat = new THREE.MeshBasicMaterial({ color: 0x88ffcc });
-const debugOrb = new THREE.Mesh(debugGeo, debugMat);
-scene.add(debugOrb);
+function bindStartButton(): void {
+  document.getElementById('start-btn')?.addEventListener('click', () => {
+    void background.start();
+  });
+}
 
-// Ground reference line
-const lineGeo = new THREE.BufferGeometry().setFromPoints([
-  new THREE.Vector3(-2, -1.5, 0),
-  new THREE.Vector3(2, -1.5, 0),
-]);
-const lineMat = new THREE.LineBasicMaterial({ color: 0x1a2a24 });
-scene.add(new THREE.Line(lineGeo, lineMat));
+background.onStatusChange((status) => {
+  switch (status) {
+    case 'idle':
+      showOverlay(
+        `<div class="overlay-card">
+          <h1>Lumen Flora</h1>
+          <p>Grow luminous flowers with your hands.</p>
+          <button id="start-btn">Enable camera to begin</button>
+        </div>`,
+        true,
+      );
+      bindStartButton();
+      break;
+    case 'requesting':
+      showOverlay('<p class="overlay-msg">Requesting camera…</p>', false);
+      break;
+    case 'active':
+      overlay.style.display = 'none';
+      break;
+    case 'denied':
+      showOverlay(
+        `<div class="overlay-card">
+          <h1>Camera needed</h1>
+          <p>Allow webcam access in your browser, then reload.</p>
+        </div>`,
+        false,
+      );
+      break;
+    case 'error':
+      showOverlay(
+        `<div class="overlay-card">
+          <h1>Camera unavailable</h1>
+          <p>Could not access your webcam. Try another browser or device.</p>
+        </div>`,
+        false,
+      );
+      break;
+  }
+});
+
+showOverlay(
+  `<div class="overlay-card">
+    <h1>Lumen Flora</h1>
+    <p>Grow luminous flowers with your hands.</p>
+    <button id="start-btn">Enable camera to begin</button>
+  </div>`,
+  true,
+);
+bindStartButton();
 
 // ── Resize ─────────────────────────────────────────────────────────────────
 
@@ -50,6 +101,7 @@ function resize(): void {
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setSize(w, h, false);
+  background.resize(w, h);
 }
 
 window.addEventListener('resize', resize);
@@ -88,8 +140,9 @@ function tick(now: number): void {
   const dt = Math.min(rawDt, MAX_DT);
 
   bus.tick(dt);
+  background.update(dt);
 
-  // Debug orb: Y = growthRate (springs visibly ease), X = bloomAperture
+  // Debug orb — proves springs ease over the treated feed.
   const growth = bus.get('growthRate');
   const aperture = bus.get('bloomAperture');
   debugOrb.position.y = -1.5 + growth * 2.5;
@@ -99,13 +152,12 @@ function tick(now: number): void {
   const hue = 0.38 + bus.get('lean') * 0.12;
   debugMat.color.setHSL(hue, 0.7, 0.55 + bus.get('branchSpread') * 0.2);
 
+  background.render(renderer);
+  // background.render() leaves autoClear off so we keep the treated feed.
   renderer.render(scene, camera);
   updateFps(dt);
 }
 
 requestAnimationFrame(tick);
-
-// ── Demo: spring targets animate when sliders aren't touched ───────────────
-// lil-gui sets both value+target directly; use setTarget to see springs ease.
 
 export { bus };

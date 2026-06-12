@@ -106,7 +106,7 @@ Three presets over one shared parametric model — lily, iris, and rose — diff
 | Session | Goal | Status |
 |---|---|---|
 | 1 | Scaffold — Vite, ParamBus, lil-gui, RAF loop | ✅ |
-| 2 | Mirrored webcam + cinematic treatment shader | — |
+| 2 | Mirrored webcam + cinematic treatment shader | ✅ |
 | 3 | Stem particle trails | — |
 | 4 | L-system branching | — |
 | 5 | Dual bloom post-processing | — |
