@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lumen Flora</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #050508;
+      }
+      #app {
+        width: 100%;
+        height: 100%;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      #fps {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 11px;
+        color: rgba(180, 220, 200, 0.6);
+        pointer-events: none;
+        z-index: 10;
+        letter-spacing: 0.05em;
+      }
+      #hint {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-family: system-ui, sans-serif;
+        font-size: 12px;
+        color: rgba(180, 200, 190, 0.35);
+        pointer-events: none;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="fps">— fps</div>
+    <div id="hint">press <kbd>h</kbd> to toggle controls</div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
