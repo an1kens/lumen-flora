@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { ParamBus } from './core/ParamBus';
 import { BackgroundLayer } from './render/background';
 import { createGardenScene } from './render/scene';
+import { StemRenderer } from './render/stems';
 import { createPanel, bindPanelToggle } from './ui/panel';
 
 // ── Bootstrap ──────────────────────────────────────────────────────────────
@@ -15,17 +16,21 @@ const gui = createPanel(bus);
 bindPanelToggle(gui);
 
 const background = new BackgroundLayer(bus);
-const { scene, camera, debugOrb, debugMat } = createGardenScene();
+const { scene, camera } = createGardenScene();
+const stems = new StemRenderer(scene);
 
 // ── Renderer ───────────────────────────────────────────────────────────────
 
 const renderer = new THREE.WebGLRenderer({
-  antialias: true,
+  antialias: false,
   alpha: false,
   powerPreference: 'high-performance',
 });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+if (import.meta.env.DEV) {
+  renderer.debug.checkShaderErrors = true;
+}
 container.appendChild(renderer.domElement);
 
 // ── Camera permission overlay ──────────────────────────────────────────────
@@ -141,19 +146,9 @@ function tick(now: number): void {
 
   bus.tick(dt);
   background.update(dt);
-
-  // Debug orb — proves springs ease over the treated feed.
-  const growth = bus.get('growthRate');
-  const aperture = bus.get('bloomAperture');
-  debugOrb.position.y = -1.5 + growth * 2.5;
-  debugOrb.position.x = (aperture - 0.5) * 2;
-  debugOrb.scale.setScalar(0.5 + bus.get('glow') * 0.8);
-
-  const hue = 0.38 + bus.get('lean') * 0.12;
-  debugMat.color.setHSL(hue, 0.7, 0.55 + bus.get('branchSpread') * 0.2);
+  stems.update(dt, bus);
 
   background.render(renderer);
-  // background.render() leaves autoClear off so we keep the treated feed.
   renderer.render(scene, camera);
   updateFps(dt);
 }
