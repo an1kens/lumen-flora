@@ -1,8 +1,0 @@
-- This is a Three.js + TypeScript + Vite generative art piece. No React, no framework.
-- All visual parameters flow through src/core/ParamBus.ts. Tracking writes, rendering reads. Never bypass it.
-- All per-particle/per-petal animation happens in GLSL shaders, never in JS loops over particles.
-- Aesthetic: luminous particles and glowing hand constellations composited over a darkened, mirrored webcam feed. Additive blending, restrained palettes (max 3 hues), eased motion only — nothing moves linearly. If a frame looks busy, darken the background; the glow always wins.
-- The webcam video and all landmark x-coordinates are mirrored through one shared utility — never mirror in two places.
-- Performance is a feature: target 60fps with ~100k particles. Prefer InstancedMesh and THREE.Points. CPU only updates uniforms.
-- Use exponential smoothing or critically damped springs for every input-driven value.
-- Keep modules small and single-purpose. Match the existing folder structure.
